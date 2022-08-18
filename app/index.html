@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' ">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/all.min.css" />
+    <link rel="stylesheet" href="css/materialize.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container center-align">
+
+
+        <ul id="slide-out" class="sidenav">
+            <li>
+                <div class="user-view">
+                    <div class="background">
+                        <img src="images/office.jpg">
+                    </div>
+                    <a href="#user"><img class="circle" src="images/yuna.jpg"></a>
+                    <a href="#name"><span class="white-text name">John Doe</span></a>
+                    <a href="#email"><span class="white-text email">jdandturk@gmail.com</span></a>
+                </div>
+            </li>
+            <li><a href="#!"><i class="material-icons">cloud</i>First Link With Icon</a></li>
+            <li><a href="#!">Second Link</a></li>
+            <li>
+                <div class="divider"></div>
+            </li>
+            <li><a class="subheader">Subheader</a></li>
+            <li><a class="waves-effect" href="#!">Third Link With Waves</a></li>
+        </ul>
+        <a href="#" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+
+
+
+        <h3><i class="fas fa-images"></i> Daily Journey</h3>
+
+        <form id="time-form">
+            <div class="file-field input-field">
+                <!-- TIME PICKER -->
+                <div>
+                    <input type="text" class="timepicker" id="time-start">
+                    <label for="time">Choose a Time</label>
+                </div>
+
+                <!-- TIME PICKER -->
+                <div>
+                    <input type="text" class="timepicker" id="time-end">
+                    <label for="time">Choose a Time</label>
+                </div>
+
+            </div>
+
+            <input type="submit" class="black btn" value="Save" />
+        </form>
+
+
+    </div>
+
+    <script src="js/materialize.min.js"></script>
+    <script>
+        const path = require('path')
+        const os = require('os')
+        const { ipcRenderer } = require('electron')
+
+        const form = document.getElementById("time-form")
+        const start = document.getElementById("time-start")
+        const end = document.getElementById("time-end")
+
+
+        form.addEventListener('submit', e => {
+            e.preventDefault()
+            const startval = start.value
+            const endval = end.value
+            var today = new Date();
+            var dd = String(today.getDate()).padStart(2, '0');
+            var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+            var yyyy = today.getFullYear();
+
+            today = dd + '/' + mm + '/' + yyyy;
+            
+            console.log(startval, endval, today)
+            M.toast({
+                html: `vai ter alarme as ${end.value}`
+            })
+            ipcRenderer.send('time:save',
+                { startval, endval,today })
+
+            start.value = ""
+            end.value = ""
+        })
+
+
+        //MATERIALIZE SETUP
+        document.addEventListener('DOMContentLoaded', function () {
+            var elems = document.querySelectorAll('.timepicker');
+            var instances = M.Timepicker.init(elems, {
+                default: 'now',
+                twelvehour: true,
+                donetext: 'ok',
+                cleartext: 'clear',
+                canceltext: 'cancel',
+                autoclose: true
+            });
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            var elems = document.querySelectorAll('.sidenav');
+            var instances = M.Sidenav.init(elems, {
+                menuWidth: 300,
+                edge: 'left',
+                closeOnClick: false,
+                draggable: true,
+                onOpen: function () { console.log('Menu Open') },
+                onClose: function () { console.log('Menu Close') }
+            });
+        });
+
+        ipcRenderer.on('time:get', (e, timeRecords) => {
+            buildTable(timeRecords)
+        })
+        function buildTable(timeRecords) {
+            if(document.getElementById('time-record-table')){
+                const element = document.getElementById('time-record-table')
+                element.remove()
+            }
+            
+
+            let table = document.createElement('table')
+            table.setAttribute("id", "time-record-table")
+            document.body.appendChild(table); // Drew the main table node on the document
+
+            for (var i = 0; i < timeRecords.table.length; i++) {
+                var tr = document.createElement('tr'); //Create 3 <tr> elements assigned to a unique variable BUT need a working alternative for 'tr[i]'
+                table.appendChild(tr); // Append to <table> node
+
+
+                var tdElement = document.createElement('td');
+                tdElement.innerHTML = timeRecords.table[i].startval;
+                tr.appendChild(tdElement); // Take string from placeholder variable and append it to <tr> node
+
+                var tdElement = document.createElement('td');
+                tdElement.innerHTML = timeRecords.table[i].endval;
+                tr.appendChild(tdElement); // Take string from placeholder variable and append it to <tr> node
+
+
+            }
+        }
+
+    </script>
+</body>
+
+</html>
